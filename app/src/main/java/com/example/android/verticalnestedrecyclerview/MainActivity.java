@@ -22,11 +22,14 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     public static final String LOG_TAG = "LOG_TAG";
+    private RecyclerView.RecycledViewPool sharedViewPool;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        sharedViewPool = new RecyclerView.RecycledViewPool();
 
         LinearLayout viewGroup = findViewById(R.id.container);
         for (Month month : createMonths()) {
@@ -49,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
         InnerRecyclerAdapter adapter = new InnerRecyclerAdapter();
         adapter.setDays(month.dayCount);
         recyclerView.setAdapter(adapter);
+        recyclerView.setRecycledViewPool(sharedViewPool);
     }
 
     List<Month> createMonths() {
