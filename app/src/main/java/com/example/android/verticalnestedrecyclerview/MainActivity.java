@@ -1,9 +1,15 @@
 package com.example.android.verticalnestedrecyclerview;
 
-import android.os.Bundle;
+import static android.view.ViewGroup.LayoutParams.*;
 
-import androidx.annotation.NonNull;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -16,38 +22,33 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     public static final String LOG_TAG = "LOG_TAG";
-    private RecyclerView outerRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Setting up the outer RecyclerView
-        OuterRecyclerAdapter outerAdapter = new OuterRecyclerAdapter(createMonths());
-        outerRecyclerView = findViewById(R.id.recycler_view_outer);
-        outerRecyclerView.setLayoutManager(new CustomLinearLayoutManager(this));
-        outerRecyclerView.setHasFixedSize(true);
-        outerRecyclerView.setAdapter(outerAdapter);
-
-        outerAdapter.setOnInnerEdgeItemShownListener(this::enableScroll);
-        outerAdapter.setOnScrollListener(y -> outerRecyclerView.smoothScrollBy(0, y));
-
-        outerRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-
-            @Override
-            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                if (dy > 0) //scrolled to BOTTOM
-                    outerAdapter.isOuterScrollingDown(true, dy);
-                else if (dy < 0) //scrolled to TOP
-                    outerAdapter.isOuterScrollingDown(false, dy);
-            }
-        });
-
+        LinearLayout viewGroup = findViewById(R.id.container);
+        for (Month month : createMonths()) {
+            inflateNestedRecycler(viewGroup, month);
+        }
     }
 
-    void enableScroll(Boolean isEnabled) {
-        ((CustomLinearLayoutManager) outerRecyclerView.getLayoutManager()).setScrollEnabled(isEnabled);
+    private void inflateNestedRecycler(LinearLayout viewGroup, Month month) {
+        View child = LayoutInflater.from(this).inflate(R.layout.recycler_view_row_outer, viewGroup, false);
+        child.setLayoutParams(new LinearLayout.LayoutParams(MATCH_PARENT, 0, 1F));
+        viewGroup.addView(child);
+
+        TextView header = child.findViewById(R.id.tv_month);
+        header.setText(month.name);
+
+        setMonthAdapter(month, child.findViewById(R.id.recycler_view_inner));
+    }
+
+    private void setMonthAdapter(Month month, RecyclerView recyclerView) {
+        InnerRecyclerAdapter adapter = new InnerRecyclerAdapter();
+        adapter.setDays(month.dayCount);
+        recyclerView.setAdapter(adapter);
     }
 
     List<Month> createMonths() {
